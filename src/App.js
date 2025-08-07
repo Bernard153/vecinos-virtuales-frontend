@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import './App.css';
 
-// 🔐 Tus credenciales
+// 🔐 Tus credenciales de Supabase
 const supabaseUrl = 'https://bcotgxupjyocbxjdtsaa.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjb3RneHVwanlvY2J4amR0c2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAzNTQsImV4cCI6MjA2OTQ5NjM1NH0.TXLUSaNlWQCYdBEUHGi0uzO-OwMkWcEiPOQmThKpFkA';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -29,6 +29,7 @@ function App() {
     cargarAlertas();
   }, []);
 
+  // ✅ Iniciar sesión
   const iniciarSesion = async (e) => {
     e.preventDefault();
     try {
@@ -47,14 +48,13 @@ function App() {
     }
   };
 
+  // ✅ Registrar usuario
   const registrar = async (e) => {
     e.preventDefault();
     try {
-      // 1. Registrar en Auth
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
 
-      // 2. Guardar en tabla 'usuarios'
       const { error: profileError } = await supabase
         .from('usuarios')
         .insert([{ id: data.user.id, email, nombre }]);
@@ -62,12 +62,48 @@ function App() {
       if (profileError) throw profileError;
 
       alert('✅ Registro exitoso');
+      setNombre('');
+      setEmail('');
+      setPassword('');
     } catch (error) {
       if (error.message.includes('User already registered')) {
         alert('⚠️ Este correo ya está registrado. ¿Quieres iniciar sesión?');
       } else {
         alert('❌ Error: ' + error.message);
       }
+    }
+  };
+
+  // ✅ Enviar alerta
+  const enviarAlerta = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const alerta = Object.fromEntries(formData);
+
+    try {
+      const res = await fetch('https://vecinos-virtuales-backend-1.onrender.com/api/alertas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          barrio_id: parseInt(alerta.barrio_id),
+          tipo: alerta.tipo,
+          descripcion: alerta.descripcion,
+          lat: alerta.lat ? parseFloat(alerta.lat) : null,
+          lng: alerta.lng ? parseFloat(alerta.lng) : null
+        })
+      });
+
+      if (res.ok) {
+        alert('✅ Alerta enviada con éxito');
+        e.target.reset();
+        // Recargar alertas
+        const nuevas = await (await fetch('https://vecinos-virtuales-backend-1.onrender.com/api/alertas')).json();
+        setAlertas(Array.isArray(nuevas) ? nuevas : []);
+      } else {
+        alert('❌ Error al enviar la alerta');
+      }
+    } catch (error) {
+      alert('❌ Error de conexión');
     }
   };
 
@@ -165,49 +201,52 @@ function App() {
 
       {/* Formulario de alertas */}
       <h3>Enviar una alerta comunitaria</h3>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const formData = new FormData(e.target);
-          const alerta = Object.fromEntries(formData);
-
-          try {
-            const res = await fetch('https://vecinos-virtuales-backend-1.onrender.com/api/alertas', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                barrio_id: parseInt(alerta.barrio_id),
-                tipo: alerta.tipo,
-                descripcion: alerta.descripcion,
-                lat: alerta.lat ? parseFloat(alerta.lat) : null,
-                lng: alerta.lng ? parseFloat(alerta.lng) : null
-              })
-            });
-
-            if (res.ok) {
-              alert('✅ Alerta enviada con éxito');
-              e.target.reset();
-              // Recargar alertas
-              const nuevas = await (await fetch('https://vecinos-virtuales-backend-1.onrender.com/api/alertas')).json();
-              setAlertas(Array.isArray(nuevas) ? nuevas : []);
-            } else {
-              alert('❌ Error al enviar la alerta');
-            }
-          } catch (error) {
-            alert('❌ Error de conexión');
-          }
-        }}
-      >
-        <select name="barrio_id" required>
+      <form onSubmit={enviarAlerta}>
+        <select name="barrio_id" required style={{ margin: '10px', padding: '10px' }}>
           <option value="">Selecciona un barrio</option>
           <option value="1">San Miguel</option>
           <option value="2">Centro</option>
         </select>
-        <input name="tipo" type="text" placeholder="Tipo de alerta" required />
-        <textarea name="descripcion" placeholder="Describe la situación..." rows="3" required />
-        <input name="lat" type="text" placeholder="Latitud (opcional)" />
-        <input name="lng" type="text" placeholder="Longitud (opcional)" />
-        <button type="submit">Enviar Alerta</button>
+        <input
+          name="tipo"
+          type="text"
+          placeholder="Tipo de alerta"
+          required
+          style={{ margin: '10px', padding: '10px' }}
+        />
+        <textarea
+          name="descripcion"
+          placeholder="Describe la situación..."
+          rows="3"
+          required
+          style={{ margin: '10px', padding: '10px' }}
+        />
+        <input
+          name="lat"
+          type="text"
+          placeholder="Latitud (opcional)"
+          style={{ margin: '10px', padding: '10px' }}
+        />
+        <input
+          name="lng"
+          type="text"
+          placeholder="Longitud (opcional)"
+          style={{ margin: '10px', padding: '10px' }}
+        />
+        <button
+          type="submit"
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            backgroundColor: '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Enviar Alerta
+        </button>
       </form>
 
       {/* Mostrar alertas */}
@@ -224,12 +263,13 @@ function App() {
               padding: '10px',
               width: '80%',
               borderRadius: '4px',
-              backgroundColor: '#f9f9f9'
+              backgroundColor: '#f9f9f9',
+              textAlign: 'left'
             }}
           >
             <strong>{alerta.tipo}</strong>: {alerta.descripcion}
             <br />
-            <small>Barrio: {alerta.barrio_id}</small>
+            <small>Barrio: {alerta.barrio_id} | {new Date(alerta.created_at).toLocaleString()}</small>
           </div>
         ))
       )}
