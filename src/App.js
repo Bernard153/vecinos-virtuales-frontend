@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import './App.css';
 
@@ -13,6 +13,21 @@ function App() {
   const [nombre, setNombre] = useState('');
   const [emailLogin, setEmailLogin] = useState('');
   const [passwordLogin, setPasswordLogin] = useState('');
+  const [alertas, setAlertas] = useState([]);
+
+  // ✅ Cargar alertas al iniciar
+  useEffect(() => {
+    const cargarAlertas = async () => {
+      try {
+        const res = await fetch('https://vecinos-virtuales-backend-1.onrender.com/api/alertas');
+        const data = await res.json();
+        setAlertas(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error al cargar alertas:', error);
+      }
+    };
+    cargarAlertas();
+  }, []);
 
   const iniciarSesion = async (e) => {
     e.preventDefault();
@@ -111,7 +126,7 @@ function App() {
 
       {/* Formulario de inicio de sesión */}
       <h3>Iniciar sesión</h3>
-      <form onSubmit={iniciarSesion}>
+      <form onSubmit={iniciarSesion} style={{ marginBottom: '40px' }}>
         <div style={{ margin: '10px 0' }}>
           <input
             type="email"
@@ -147,6 +162,77 @@ function App() {
           Iniciar Sesión
         </button>
       </form>
+
+      {/* Formulario de alertas */}
+      <h3>Enviar una alerta comunitaria</h3>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const alerta = Object.fromEntries(formData);
+
+          try {
+            const res = await fetch('https://vecinos-virtuales-backend-1.onrender.com/api/alertas', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                barrio_id: parseInt(alerta.barrio_id),
+                tipo: alerta.tipo,
+                descripcion: alerta.descripcion,
+                lat: alerta.lat ? parseFloat(alerta.lat) : null,
+                lng: alerta.lng ? parseFloat(alerta.lng) : null
+              })
+            });
+
+            if (res.ok) {
+              alert('✅ Alerta enviada con éxito');
+              e.target.reset();
+              // Recargar alertas
+              const nuevas = await (await fetch('https://vecinos-virtuales-backend-1.onrender.com/api/alertas')).json();
+              setAlertas(Array.isArray(nuevas) ? nuevas : []);
+            } else {
+              alert('❌ Error al enviar la alerta');
+            }
+          } catch (error) {
+            alert('❌ Error de conexión');
+          }
+        }}
+      >
+        <select name="barrio_id" required>
+          <option value="">Selecciona un barrio</option>
+          <option value="1">San Miguel</option>
+          <option value="2">Centro</option>
+        </select>
+        <input name="tipo" type="text" placeholder="Tipo de alerta" required />
+        <textarea name="descripcion" placeholder="Describe la situación..." rows="3" required />
+        <input name="lat" type="text" placeholder="Latitud (opcional)" />
+        <input name="lng" type="text" placeholder="Longitud (opcional)" />
+        <button type="submit">Enviar Alerta</button>
+      </form>
+
+      {/* Mostrar alertas */}
+      <h3>Alertas Recientes</h3>
+      {alertas.length === 0 ? (
+        <p>No hay alertas aún</p>
+      ) : (
+        alertas.map((alerta) => (
+          <div
+            key={alerta.id}
+            style={{
+              border: '1px solid #ccc',
+              margin: '10px auto',
+              padding: '10px',
+              width: '80%',
+              borderRadius: '4px',
+              backgroundColor: '#f9f9f9'
+            }}
+          >
+            <strong>{alerta.tipo}</strong>: {alerta.descripcion}
+            <br />
+            <small>Barrio: {alerta.barrio_id}</small>
+          </div>
+        ))
+      )}
     </div>
   );
 }
