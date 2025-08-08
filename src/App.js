@@ -19,7 +19,7 @@ function App() {
   useEffect(() => {
     const cargarAlertas = async () => {
       try {
-        const res = await fetch('https://vecinos-virtuales-backend-1.onrender.com/api/alertas');
+        const res = await fetch('https://vecinos-virtuales-backend-2.onrender.com/api/alertas');
         const data = await res.json();
         setAlertas(Array.isArray(data) ? data : []);
       } catch (error) {
@@ -81,7 +81,7 @@ function App() {
     const alerta = Object.fromEntries(formData);
 
     try {
-      const res = await fetch('https://vecinos-virtuales-backend-1.onrender.com/api/alertas', {
+      const res = await fetch('https://vecinos-virtuales-backend-2.onrender.com/api/alertas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -97,7 +97,7 @@ function App() {
         alert('✅ Alerta enviada con éxito');
         e.target.reset();
         // Recargar alertas
-        const nuevas = await (await fetch('https://vecinos-virtuales-backend-1.onrender.com/api/alertas')).json();
+        const nuevas = await (await fetch('https://vecinos-virtuales-backend-2.onrender.com/api/alertas')).json();
         setAlertas(Array.isArray(nuevas) ? nuevas : []);
       } else {
         alert('❌ Error al enviar la alerta');
