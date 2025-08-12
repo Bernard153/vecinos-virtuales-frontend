@@ -23,21 +23,21 @@ function App() {
     cargarAlertas();
   }, []);
 
-  // ✅ Iniciar sesión (simulado)
-  const iniciarSesion = async (e) => {
-    e.preventDefault();
-    alert('✅ Inicio de sesión no implementado en este ejemplo');
-    setEmailLogin('');
-    setPasswordLogin('');
-  };
-
-  // ✅ Registrar usuario (simulado)
+  // ✅ Registrar usuario
   const registrar = async (e) => {
     e.preventDefault();
     alert('✅ Registro no implementado en este ejemplo');
     setNombre('');
     setEmail('');
     setPassword('');
+  };
+
+  // ✅ Iniciar sesión
+  const iniciarSesion = async (e) => {
+    e.preventDefault();
+    alert('✅ Inicio de sesión no implementado en este ejemplo');
+    setEmailLogin('');
+    setPasswordLogin('');
   };
 
   // ✅ Enviar alerta

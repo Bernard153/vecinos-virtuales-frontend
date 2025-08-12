@@ -1,0 +1,53 @@
+.App {
+  text-align: center;
+  background: #f0f8ff;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.App-header {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.App-header h1 {
+  color: #1a365d;
+  margin-bottom: 10px;
+}
+
+.App-header p {
+  color: #4a5568;
+  margin-bottom: 40px;
+}
+
+.neighborhoods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 300px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  text-align: left;
+}
+
+.card .avatar {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.card h2 {
+  color: #2d3748;
+  margin: 10px 0;
+}
+
+.card p {
+  color: #4a5568;
+  margin: 8px 0;
+  font-size: 14px;
+}
