@@ -89,8 +89,8 @@ function App() {
 
   // ✅ Registrar usuario con Supabase
   const registrar = async (e) => {
-  e.preventDefault();
-  try {
+    e.preventDefault();
+    try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -100,15 +100,16 @@ function App() {
       });
 
       if (error) throw error;
- 
-      alert('✅ Registro exitoso: ' + data.user.email);
-      setNombre('');
-      setEmail('');
-      setPassword('');
-    } catch (error) {
-      alert('❌ Error: ' + error.message);
-    }
-  };
+
+      const { error: profileError } = await supabase
+        .from('usuarios')
+        .insert([{ 
+          id: data.user.id, 
+          email, 
+          nombre, 
+          barrio: barrioUsuario || 'Lomas de Tafi',
+          tipo_usuario: 'común'
+        }]);
 
       if (profileError) throw profileError;
 
@@ -354,4 +355,3 @@ function App() {
 }
 
 export default App;
-// Despliegue forzado: 5 de octubre
