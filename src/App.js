@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import './App.css';
 
-// 🔐 Credenciales de Supabase
+// 🔐 Credenciales de Supabase (sin espacios)
 const supabaseUrl = 'https://bcotgxupjyocbxjdtsaa.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjb3RneHVwanlvY2J4amR0c2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAzNTQsImV4cCI6MjA2OTQ5NjM1NH0.TXLUSaNlWQCYdBEUHGi0uzO-OwMkWcEiPOQmThKpFkA';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -95,7 +95,7 @@ function App() {
         email,
         password,
         options: {
-          data: { nombre }
+           { nombre }
         }
       });
 
