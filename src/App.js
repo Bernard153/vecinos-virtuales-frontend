@@ -358,3 +358,4 @@ function App() {
 }
 
 export default App;
+// Despliegue forzado: 5 de octubre
