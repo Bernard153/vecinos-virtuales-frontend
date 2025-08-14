@@ -8,20 +8,78 @@ function App() {
   const [emailLogin, setEmailLogin] = useState('');
   const [passwordLogin, setPasswordLogin] = useState('');
   const [alertas, setAlertas] = useState([]);
+  const [barrioUsuario, setBarrioUsuario] = useState('');
 
-  // ✅ Cargar alertas al iniciar
+  // ✅ Detectar ubicación del usuario
   useEffect(() => {
+    const detectarUbicacion = () => {
+      if (!navigator.geolocation) {
+        console.log("Geolocalización no soportada");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+            );
+            const data = await response.json();
+
+            const barrio = 
+              data.address.suburb || 
+              data.address.neighbourhood || 
+              data.address.hamlet || 
+              data.address.town || 
+              data.address.village || 
+              'Lomas de Tafi'; // Barrio por defecto
+
+            setBarrioUsuario(barrio);
+            localStorage.setItem('barrioUsuario', barrio);
+            console.log("Barrio detectado:", barrio);
+          } catch (error) {
+            console.error("Error al obtener el barrio:", error);
+            setBarrioUsuario('Lomas de Tafi');
+            localStorage.setItem('barrioUsuario', 'Lomas de Tafi');
+          }
+        },
+        (error) => {
+          console.log("Permiso denegado o error:", error.message);
+          const guardado = localStorage.getItem('barrioUsuario') || 'Lomas de Tafi';
+          setBarrioUsuario(guardado);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    };
+
+    const guardado = localStorage.getItem('barrioUsuario');
+    if (guardado) {
+      setBarrioUsuario(guardado);
+    } else {
+      detectarUbicacion();
+    }
+  }, []);
+
+  // ✅ Cargar alertas filtradas por barrio
+  useEffect(() => {
+    if (!barrioUsuario) return;
+
     const cargarAlertas = async () => {
       try {
-        const res = await fetch('https://vecinos-virtuales-backend.onrender.com/api/alertas');
+        const res = await fetch(
+          `https://vecinos-virtuales-backend.onrender.com/api/alertas?barrio=${encodeURIComponent(barrioUsuario)}`
+        );
         const data = await res.json();
         setAlertas(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error al cargar alertas:', error);
       }
     };
+
     cargarAlertas();
-  }, []);
+  }, [barrioUsuario]);
 
   // ✅ Registrar usuario
   const registrar = async (e) => {
@@ -51,6 +109,7 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          barrio: barrioUsuario,
           barrio_id: parseInt(alerta.barrio_id),
           tipo: alerta.tipo,
           descripcion: alerta.descripcion,
@@ -62,8 +121,7 @@ function App() {
       if (res.ok) {
         alert('✅ Alerta enviada con éxito');
         e.target.reset();
-        // Recargar alertas
-        const nuevas = await (await fetch('https://vecinos-virtuales-backend.onrender.com/api/alertas')).json();
+        const nuevas = await (await fetch(`https://vecinos-virtuales-backend.onrender.com/api/alertas?barrio=${encodeURIComponent(barrioUsuario)}`)).json();
         setAlertas(Array.isArray(nuevas) ? nuevas : []);
       } else {
         alert('❌ Error al enviar la alerta');
@@ -76,6 +134,12 @@ function App() {
   return (
     <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'Arial' }}>
       <h1>Vecinos Virtuales</h1>
+
+      {barrioUsuario && (
+        <p style={{ color: '#007bff', fontWeight: 'bold' }}>
+          Bienvenido a {barrioUsuario}
+        </p>
+      )}
 
       {/* Formulario de registro */}
       <p>Regístrate como vecino</p>
@@ -235,7 +299,7 @@ function App() {
           >
             <strong>{alerta.tipo}</strong>: {alerta.descripcion}
             <br />
-            <small>Barrio: {alerta.barrio_id} | {new Date(alerta.created_at).toLocaleString()}</small>
+            <small>Barrio: {alerta.barrio || alerta.barrio_id} | {new Date(alerta.created_at).toLocaleString()}</small>
           </div>
         ))
       )}
