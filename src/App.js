@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import './App.css';
+
+// 🔐 Credenciales de Supabase
+const supabaseUrl = 'https://bcotgxupjyocbxjdtsaa.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjb3RneHVwanlvY2J4amR0c2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAzNTQsImV4cCI6MjA2OTQ5NjM1NH0.TXLUSaNlWQCYdBEUHGi0uzO-OwMkWcEiPOQmThKpFkA';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 function App() {
   const [email, setEmail] = useState('');
@@ -34,7 +40,7 @@ function App() {
               data.address.hamlet || 
               data.address.town || 
               data.address.village || 
-              'Lomas de Tafi'; // Barrio por defecto
+              'Lomas de Tafi';
 
             setBarrioUsuario(barrio);
             localStorage.setItem('barrioUsuario', barrio);
@@ -81,21 +87,65 @@ function App() {
     cargarAlertas();
   }, [barrioUsuario]);
 
-  // ✅ Registrar usuario
+  // ✅ Registrar usuario con Supabase
   const registrar = async (e) => {
     e.preventDefault();
-    alert('✅ Registro no implementado en este ejemplo');
-    setNombre('');
-    setEmail('');
-    setPassword('');
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            nombre,
+            barrio: barrioUsuario || 'Lomas de Tafi'
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      const { error: profileError } = await supabase
+        .from('usuarios')
+        .insert([{ 
+          id: data.user.id, 
+          email, 
+          nombre, 
+          barrio: barrioUsuario || 'Lomas de Tafi',
+          tipo_usuario: 'común'
+        }]);
+
+      if (profileError) throw profileError;
+
+      alert('✅ Registro exitoso. Bienvenido a Vecinos Virtuales!');
+      setNombre('');
+      setEmail('');
+      setPassword('');
+    } catch (error) {
+      if (error.message.includes('User already registered')) {
+        alert('⚠️ Este correo ya está registrado. ¿Quieres iniciar sesión?');
+      } else {
+        alert('❌ Error: ' + error.message);
+      }
+    }
   };
 
-  // ✅ Iniciar sesión
+  // ✅ Iniciar sesión con Supabase
   const iniciarSesion = async (e) => {
     e.preventDefault();
-    alert('✅ Inicio de sesión no implementado en este ejemplo');
-    setEmailLogin('');
-    setPasswordLogin('');
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailLogin,
+        password: passwordLogin
+      });
+
+      if (error) throw error;
+
+      alert('✅ Sesión iniciada como ' + data.user.email);
+      setEmailLogin('');
+      setPasswordLogin('');
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    }
   };
 
   // ✅ Enviar alerta
