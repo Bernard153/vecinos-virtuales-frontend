@@ -89,30 +89,26 @@ function App() {
 
   // ✅ Registrar usuario con Supabase
   const registrar = async (e) => {
-    e.preventDefault();
-    try {
+  e.preventDefault();
+  try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            nombre,
-            barrio: barrioUsuario || 'Lomas de Tafi'
-          }
+          data: { nombre }
         }
       });
 
       if (error) throw error;
-
-      const { error: profileError } = await supabase
-        .from('usuarios')
-        .insert([{ 
-          id: data.user.id, 
-          email, 
-          nombre, 
-          barrio: barrioUsuario || 'Lomas de Tafi',
-          tipo_usuario: 'común'
-        }]);
+ 
+      alert('✅ Registro exitoso: ' + data.user.email);
+      setNombre('');
+      setEmail('');
+      setPassword('');
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    }
+  };
 
       if (profileError) throw profileError;
 
