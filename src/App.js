@@ -75,7 +75,8 @@ function App() {
     const cargarAlertas = async () => {
       try {
         const res = await fetch(
-          `https://vecinos-virtuales-backend.onrender.com/api/alertas?barrio=${encodeURIComponent(barrioUsuario)}`
+           `https://vecinos-virtuales-backend.onrender.com/api/alertas?barrio_id=1`
+);
         );
         const data = await res.json();
         setAlertas(Array.isArray(data) ? data : []);
