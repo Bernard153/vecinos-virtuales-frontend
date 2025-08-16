@@ -1,358 +1,84 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import './App.css';
 
-// 🔐 Credenciales de Supabase (sin espacios)
-const supabaseUrl = 'https://bcotgxupjyocbxjdtsaa.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjb3RneHVwanlvY2J4amR0c2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAzNTQsImV4cCI6MjA2OTQ5NjM1NH0.TXLUSaNlWQCYdBEUHGi0uzO-OwMkWcEiPOQmThKpFkA';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(
+  'https://bcotgxupjyocbxjdtsaa.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjb3RneHVwanlvY2J4amR0c2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAzNTQsImV4cCI6MjA2OTQ5NjM1NH0.TXLUSaNlWQCYdBEUHGi0uzO-OwMkWcEiPOQmThKpFkA'
+);
 
-function App() {
+export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nombre, setNombre] = useState('');
-  const [emailLogin, setEmailLogin] = useState('');
-  const [passwordLogin, setPasswordLogin] = useState('');
   const [alertas, setAlertas] = useState([]);
-  const [barrioUsuario, setBarrioUsuario] = useState('');
+  const [barrioUsuario, setBarrioUsuario] = useState('Lomas de Tafi');
 
-  // ✅ Detectar ubicación del usuario
+  // Cargar alertas
   useEffect(() => {
-    const detectarUbicacion = () => {
-      if (!navigator.geolocation) {
-        console.log("Geolocalización no soportada");
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-
-          try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
-            );
-            const data = await response.json();
-
-            const barrio = 
-              data.address.suburb || 
-              data.address.neighbourhood || 
-              data.address.hamlet || 
-              data.address.town || 
-              data.address.village || 
-              'Lomas de Tafi';
-
-            setBarrioUsuario(barrio);
-            localStorage.setItem('barrioUsuario', barrio);
-            console.log("Barrio detectado:", barrio);
-          } catch (error) {
-            console.error("Error al obtener el barrio:", error);
-            setBarrioUsuario('Lomas de Tafi');
-            localStorage.setItem('barrioUsuario', 'Lomas de Tafi');
-          }
-        },
-        (error) => {
-          console.log("Permiso denegado o error:", error.message);
-          const guardado = localStorage.getItem('barrioUsuario') || 'Lomas de Tafi';
-          setBarrioUsuario(guardado);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-      );
+    const cargar = async () => {
+      const res = await fetch('https://vecinos-virtuales-backend.onrender.com/api/alertas?barrio_id=1');
+      const data = await res.json();
+      setAlertas(data);
     };
-
-    const guardado = localStorage.getItem('barrioUsuario');
-    if (guardado) {
-      setBarrioUsuario(guardado);
-    } else {
-      detectarUbicacion();
-    }
+    cargar();
   }, []);
 
-  // ✅ Cargar alertas filtradas por barrio
-  useEffect(() => {
-    if (!barrioUsuario) return;
-
-    const cargarAlertas = async () => {
-      try {
-        const res = await fetch(
-           `https://vecinos-virtuales-backend.onrender.com/api/alertas?barrio_id=1`
-     );
-        );
-        const data = await res.json();
-        setAlertas(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Error al cargar alertas:', error);
-      }
-    };
-
-    cargarAlertas();
-  }, [barrioUsuario]);
-
-  // ✅ Registrar usuario con Supabase
+  // Registrar usuario
   const registrar = async (e) => {
     e.preventDefault();
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-           { nombre }
-        }
-      });
-
-      if (error) throw error;
-
-      const { error: profileError } = await supabase
-        .from('usuarios')
-        .insert([{ 
-          id: data.user.id, 
-          email, 
-          nombre, 
-          barrio: barrioUsuario || 'Lomas de Tafi',
-          tipo_usuario: 'común'
-        }]);
-
-      if (profileError) throw profileError;
-
-      alert('✅ Registro exitoso. Bienvenido a Vecinos Virtuales!');
-      setNombre('');
-      setEmail('');
-      setPassword('');
-    } catch (error) {
-      if (error.message.includes('User already registered')) {
-        alert('⚠️ Este correo ya está registrado. ¿Quieres iniciar sesión?');
-      } else {
-        alert('❌ Error: ' + error.message);
-      }
-    }
+    const { data, error } = await supabase.auth.signUp({
+      email, password, options: { data: { nombre } }
+    });
+    if (error) alert('Error: ' + error.message);
+    else alert('✅ Registrado: ' + data.user.email);
   };
 
-  // ✅ Iniciar sesión con Supabase
-  const iniciarSesion = async (e) => {
-    e.preventDefault();
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: emailLogin,
-        password: passwordLogin
-      });
-
-      if (error) throw error;
-
-      alert('✅ Sesión iniciada como ' + data.user.email);
-      setEmailLogin('');
-      setPasswordLogin('');
-    } catch (error) {
-      alert('❌ Error: ' + error.message);
-    }
-  };
-
-  // ✅ Enviar alerta
-  const enviarAlerta = async (e) => {
+  // Enviar alerta
+  const enviar = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const alerta = Object.fromEntries(formData);
+    const tipo = formData.get('tipo');
+    const descripcion = formData.get('descripcion');
 
-    try {
-      const res = await fetch('https://vecinos-virtuales-backend.onrender.com/api/alertas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          barrio: barrioUsuario,
-          barrio_id: parseInt(alerta.barrio_id),
-          tipo: alerta.tipo,
-          descripcion: alerta.descripcion,
-          lat: alerta.lat ? parseFloat(alerta.lat) : null,
-          lng: alerta.lng ? parseFloat(alerta.lng) : null
-        })
-      });
+    const res = await fetch('https://vecinos-virtuales-backend.onrender.com/api/alertas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ barrio_id: 1, tipo, descripcion })
+    });
 
-      if (res.ok) {
-        alert('✅ Alerta enviada con éxito');
-        e.target.reset();
-        const nuevas = await (await fetch(`https://vecinos-virtuales-backend.onrender.com/api/alertas?barrio=${encodeURIComponent(barrioUsuario)}`)).json();
-        setAlertas(Array.isArray(nuevas) ? nuevas : []);
-      } else {
-        alert('❌ Error al enviar la alerta');
-      }
-    } catch (error) {
-      alert('❌ Error de conexión');
+    if (res.ok) {
+      alert('✅ Alerta enviada');
+      const nuevas = await (await fetch('https://vecinos-virtuales-backend.onrender.com/api/alertas?barrio_id=1')).json();
+      setAlertas(nuevas);
     }
   };
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'Arial' }}>
+    <div style={{ padding: 20 }}>
       <h1>Vecinos Virtuales</h1>
+      <p>Bienvenido a {barrioUsuario}</p>
 
-      {barrioUsuario && (
-        <p style={{ color: '#007bff', fontWeight: 'bold' }}>
-          Bienvenido a {barrioUsuario}
-        </p>
-      )}
-
-      {/* Formulario de registro */}
-      <p>Regístrate como vecino</p>
-      <form onSubmit={registrar} style={{ marginBottom: '40px' }}>
-        <div style={{ margin: '10px 0' }}>
-          <input
-            type="text"
-            placeholder="Nombre"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            required
-            style={{ padding: '10px', fontSize: '16px' }}
-          />
-        </div>
-        <div style={{ margin: '10px 0' }}>
-          <input
-            type="email"
-            placeholder="Correo"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ padding: '10px', fontSize: '16px' }}
-          />
-        </div>
-        <div style={{ margin: '10px 0' }}>
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ padding: '10px', fontSize: '16px' }}
-          />
-        </div>
-        <button
-          type="submit"
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          Registrarse
-        </button>
+      <h3>Regístrate</h3>
+      <form onSubmit={registrar}>
+        <input placeholder="Nombre" value={nombre} onChange={e => setNombre(e.target.value)} required style={{ display: 'block', margin: '10px 0' }} />
+        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={{ display: 'block', margin: '10px 0' }} />
+        <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required style={{ display: 'block', margin: '10px 0' }} />
+        <button type="submit">Registrar</button>
       </form>
 
-      {/* Formulario de inicio de sesión */}
-      <h3>Iniciar sesión</h3>
-      <form onSubmit={iniciarSesion} style={{ marginBottom: '40px' }}>
-        <div style={{ margin: '10px 0' }}>
-          <input
-            type="email"
-            placeholder="Correo"
-            value={emailLogin}
-            onChange={(e) => setEmailLogin(e.target.value)}
-            required
-            style={{ padding: '10px', fontSize: '16px' }}
-          />
-        </div>
-        <div style={{ margin: '10px 0' }}>
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={passwordLogin}
-            onChange={(e) => setPasswordLogin(e.target.value)}
-            required
-            style={{ padding: '10px', fontSize: '16px' }}
-          />
-        </div>
-        <button
-          type="submit"
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          Iniciar Sesión
-        </button>
+      <h3>Enviar Alerta</h3>
+      <form onSubmit={enviar}>
+        <input name="tipo" placeholder="Tipo" required style={{ display: 'block', margin: '10px 0' }} />
+        <textarea name="descripcion" placeholder="Descripción" required style={{ display: 'block', margin: '10px 0' }} />
+        <button type="submit">Enviar</button>
       </form>
 
-      {/* Formulario de alertas */}
-      <h3>Enviar una alerta comunitaria</h3>
-      <form onSubmit={enviarAlerta}>
-        <select name="barrio_id" required style={{ margin: '10px', padding: '10px' }}>
-          <option value="">Selecciona un barrio</option>
-          <option value="1">San Miguel</option>
-          <option value="2">Centro</option>
-        </select>
-        <input
-          name="tipo"
-          type="text"
-          placeholder="Tipo de alerta"
-          required
-          style={{ margin: '10px', padding: '10px' }}
-        />
-        <textarea
-          name="descripcion"
-          placeholder="Describe la situación..."
-          rows="3"
-          required
-          style={{ margin: '10px', padding: '10px' }}
-        />
-        <input
-          name="lat"
-          type="text"
-          placeholder="Latitud (opcional)"
-          style={{ margin: '10px', padding: '10px' }}
-        />
-        <input
-          name="lng"
-          type="text"
-          placeholder="Longitud (opcional)"
-          style={{ margin: '10px', padding: '10px' }}
-        />
-        <button
-          type="submit"
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            backgroundColor: '#dc3545',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          Enviar Alerta
-        </button>
-      </form>
-
-      {/* Mostrar alertas */}
       <h3>Alertas Recientes</h3>
-      {alertas.length === 0 ? (
-        <p>No hay alertas aún</p>
-      ) : (
-        alertas.map((alerta) => (
-          <div
-            key={alerta.id}
-            style={{
-              border: '1px solid #ccc',
-              margin: '10px auto',
-              padding: '10px',
-              width: '80%',
-              borderRadius: '4px',
-              backgroundColor: '#f9f9f9',
-              textAlign: 'left'
-            }}
-          >
-            <strong>{alerta.tipo}</strong>: {alerta.descripcion}
-            <br />
-            <small>Barrio: {alerta.barrio || alerta.barrio_id} | {new Date(alerta.created_at).toLocaleString()}</small>
-          </div>
-        ))
-      )}
+      {alertas.map(a => (
+        <div key={a.id} style={{ border: '1px solid #ccc', margin: '10px 0', padding: 10 }}>
+          <strong>{a.tipo}</strong>: {a.descripcion}
+        </div>
+      ))}
     </div>
   );
 }
-
-export default App;
