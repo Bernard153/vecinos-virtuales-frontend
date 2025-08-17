@@ -31,8 +31,9 @@ export default function App() {
   // Registrar usuario
   const registrar = async (e) => {
     e.preventDefault();
+    console.log("Intentando registrar..."); // 👈 Depuración
+
     try {
-      // 1. Registrar en Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -43,7 +44,8 @@ export default function App() {
 
       if (error) throw error;
 
-      // 2. Guardar perfil en la tabla 'usuarios'
+      console.log("Usuario registrado:", data); // 👈 Depuración
+
       const { error: profileError } = await supabase
         .from('usuarios')
         .insert([{ 
@@ -62,6 +64,7 @@ export default function App() {
       setEmail('');
       setPassword('');
     } catch (error) {
+      console.error('Error en registro:', error); // 👈 Depuración
       if (error.message.includes('User already registered')) {
         alert('⚠️ Este correo ya está registrado. ¿Quieres iniciar sesión?');
       } else {
