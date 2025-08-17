@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // 🔐 Credenciales corregidas (sin espacios)
 const supabase = createClient(
-  'https://bcotgxupjyocbxjdtsaa.supabase.co',
+  'https://bcotgxupjyocbxjdtsaa.supabase.co', // ✅ Sin espacios
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjb3RneHVwanlvY2J4amR0c2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAzNTQsImV4cCI6MjA2OTQ5NjM1NH0.TXLUSaNlWQCYdBEUHGi0uzO-OwMkWcEiPOQmThKpFkA'
 );
 
@@ -32,6 +32,7 @@ export default function App() {
   const registrar = async (e) => {
     e.preventDefault();
     try {
+      // 1. Registrar en Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -42,14 +43,14 @@ export default function App() {
 
       if (error) throw error;
 
-      // ✅ Guardar perfil en la tabla 'usuarios'
+      // 2. Guardar perfil en la tabla 'usuarios'
       const { error: profileError } = await supabase
         .from('usuarios')
         .insert([{ 
           id: data.user.id, 
           email, 
           nombre, 
-          barrio: barrioUsuario,
+          barrio: barrioUsuario || 'Lomas de Tafi',
           tipo_usuario: 'común',
           fecha_registro: new Date() 
         }]);
@@ -77,7 +78,7 @@ export default function App() {
     const descripcion = formData.get('descripcion');
 
     try {
-      const res = await fetch('https://vecinos-virtuales-backend.onrender.com/api/alertas', {
+      const res = await fetch('https://vecinos-virtuales-backend.onrender.com/api/alertas', { // ✅ Sin espacios
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
