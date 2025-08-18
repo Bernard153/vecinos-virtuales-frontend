@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// 🔐 Credenciales de Supabase (sin espacios)
+// 🔐 Credenciales corregidas (sin espacios)
 const supabase = createClient(
   'https://bcotgxupjyocbxjdtsaa.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjb3RneHVwanlvY2J4amR0c2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAzNTQsImV4cCI6MjA2OTQ5NjM1NH0.TXLUSaNlWQCYdBEUHGi0uzO-OwMkWcEiPOQmThKpFkA'
@@ -76,18 +76,41 @@ export default function App() {
 
       <h3>Regístrate</h3>
       <form onSubmit={registrar}>
-        <input placeholder="Nombre" value={nombre} onChange={e => setNombre(e.target.value)} required style={{ display: 'block', margin: '10px 0' }} />
-        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={{ display: 'block', margin: '10px 0' }} />
-        <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required style={{ display: 'block', margin: '10px 0' }} />
+        <input 
+          placeholder="Nombre" 
+          value={nombre} 
+          onChange={(e) => setNombre(e.target.value)} 
+          required 
+          style={{ display: 'block', margin: '10px 0' }} 
+        />
+        <input 
+          placeholder="Email" 
+          value={email} 
+          onChange={(e) => setEmail(e.target.value)} 
+          required 
+          style={{ display: 'block', margin: '10px 0' }} 
+        />
+        <input 
+          type="password" 
+          placeholder="Contraseña" 
+          value={password} 
+          onChange={(e) => setPassword(e.target.value)} 
+          required 
+          style={{ display: 'block', margin: '10px 0' }} 
+        />
         <button type="submit">Registrarse</button>
       </form>
 
       <h3>Alertas Recientes</h3>
-      {alertas.map(a => (
-        <div key={a.id} style={{ border: '1px solid #ccc', margin: '10px 0', padding: 10 }}>
-          <strong>{a.tipo}</strong>: {a.descripcion}
-        </div>
-      ))}
+      {alertas.length === 0 ? (
+        <p>No hay alertas aún</p>
+      ) : (
+        alertas.map(a => (
+          <div key={a.id} style={{ border: '1px solid #ccc', margin: '10px 0', padding: 10 }}>
+            <strong>{a.tipo}</strong>: {a.descripcion}
+          </div>
+        ))
+      )}
     </div>
   );
 }
