@@ -36,7 +36,7 @@ export default function App() {
         email,
         password,
         options: {
-            { nombre }
+          { nombre }
         }
       });
 
