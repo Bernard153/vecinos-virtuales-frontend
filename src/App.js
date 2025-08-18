@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // 🔐 Credenciales de Supabase (sin espacios)
 const supabase = createClient(
-  'https://bcotgxupjyocbxjdtsaa.supabase.co',
+  'https://bcotgxupjyocbxjdtsaa.supabase.co', // ✅ Sin espacios
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjb3RneHVwanlvY2J4amR0c2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAzNTQsImV4cCI6MjA2OTQ5NjM1NH0.TXLUSaNlWQCYdBEUHGi0uzO-OwMkWcEiPOQmThKpFkA'
 );
 
