@@ -97,7 +97,7 @@ export default function App() {
         email,
         password,
         options: {
-           { nombre }
+         data:{ nombre }
         }
       });
 
