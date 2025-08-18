@@ -1,3 +1,4 @@
+console.log("🚀 Vecinos Virtuales - Versión 2.0 - Despliegue forzado");
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
