@@ -1,3 +1,4 @@
+console.log("🚀 Despliegue forzado - Registro funcional");
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
@@ -35,8 +36,8 @@ export default function App() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-            { nombre }
+        options:{
+           { nombre }
         }
       });
 
