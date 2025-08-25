@@ -11,7 +11,6 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nombre, setNombre] = useState('');
-  const [tipo, setTipo] = useState('común'); // común, oficio, profesional, auspiciante
 
   const registrar = async (e) => {
     e.preventDefault();
@@ -26,37 +25,18 @@ export default function App() {
 
       if (error) throw error;
 
-      // Guardar perfil con tipo de usuario
-      const { error: profileError } = await supabase
-        .from('usuarios')
-        .insert([{ 
-          id: data.user.id, 
-          email, 
-          nombre, 
-          tipo_usuario: tipo,
-          fecha_registro: new Date() 
-        }]);
-
-      if (profileError) throw profileError;
-
-      alert(`✅ Registro exitoso: ${data.user.email} como ${tipo}`);
+      alert('✅ Registro exitoso: ' + data.user.email);
+      setNombre('');
       setEmail('');
       setPassword('');
-      setNombre('');
     } catch (error) {
-      if (error.message.includes('User already registered')) {
-        alert('⚠️ Este correo ya está registrado. ¿Quieres iniciar sesión?');
-      } else {
-        alert('❌ Error: ' + error.message);
-      }
+      alert('❌ Error: ' + error.message);
     }
   };
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>Vecinos Virtuales</h1>
-      <p>Regístrate según tu rol</p>
-
+      <h1>Prueba de Registro</h1>
       <form onSubmit={registrar}>
         <input
           placeholder="Nombre"
@@ -80,17 +60,7 @@ export default function App() {
           required
           style={{ display: 'block', margin: '10px 0' }}
         />
-        <select
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
-          style={{ display: 'block', margin: '10px 0' }}
-        >
-          <option value="común">Usuario Común</option>
-          <option value="oficio">Usuario Oficio</option>
-          <option value="profesional">Usuario Profesional</option>
-          <option value="auspiciante">Auspiciante / Mayorista / Ente</option>
-        </select>
-        <button type="submit">Registrarse</button>
+        <button type="submit">Registrar</button>
       </form>
     </div>
   );
