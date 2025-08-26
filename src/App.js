@@ -1,58 +1,82 @@
-import React, { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-// 🔐 Credenciales corregidas (sin espacios)
-const supabase = createClient(
-  'https://bcotgxupjyocbxjdtsaa.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjb3RneHVwanlvY2J4amR0c2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAzNTQsImV4cCI6MjA2OTQ5NjM1NH0.TXLUSaNlWQCYdBEUHGi0uzO-OwMkWcEiPOQmThKpFkA'
-);
+import React, { useState, useEffect } from 'react';
 
 export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nombre, setNombre] = useState('');
-  const [alertas, setAlertas] = useState([
-    { id: 1, tipo: 'Corte de luz', descripcion: 'En calle 5 y 6', fecha: new Date().toISOString() }
-  ]);
+  const [alertas, setAlertas] = useState([]);
 
-  // ✅ Registro funcional
+  // Cargar alertas del backend en Railway
+  useEffect(() => {
+    const cargarAlertas = async () => {
+      try {
+        const res = await fetch('https://vecinos-virtuales.up.railway.app/api/alertas?barrio_id=1');
+        const data = await res.json();
+        setAlertas(data);
+      } catch (error) {
+        console.error('Error al cargar alertas:', error);
+        setAlertas([]);
+      }
+    };
+    cargarAlertas();
+  }, []);
+
+  // ✅ Registrar usuario (envía al backend)
   const registrar = async (e) => {
     e.preventDefault();
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-            { nombre }
-        }
+      const res = await fetch('https://vecinos-virtuales.up.railway.app/api/usuarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, nombre, tipo_usuario: 'común' })
       });
 
-      if (error) throw error;
-
-      alert('✅ Registro exitoso: ' + data.user.email);
-      setNombre('');
-      setEmail('');
-      setPassword('');
+      if (res.ok) {
+        alert('✅ Registro exitoso: ' + email);
+        setNombre('');
+        setEmail('');
+        setPassword('');
+      } else {
+        const error = await res.json();
+        alert('❌ Error: ' + error.error);
+      }
     } catch (error) {
-      alert('❌ Error: ' + error.message);
+      alert('❌ Error de conexión');
     }
   };
 
-  // ✅ Enviar alerta (a backend o simulado)
-  const enviar = async (e) => {
+  // ✅ Enviar alerta al backend
+  const enviarAlerta = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const tipo = formData.get('tipo');
     const descripcion = formData.get('descripcion');
 
-    // Simulamos que se guardó
-    setAlertas([
-      { id: Date.now(), tipo, descripcion, fecha: new Date().toISOString() },
-      ...alertas
-    ]);
+    try {
+      const res = await fetch('https://vecinos-virtuales.up.railway.app/api/alertas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          barrio_id: 1,
+          tipo,
+          descripcion,
+          lat: null,
+          lng: null
+        })
+      });
 
-    alert('✅ Alerta enviada');
-    e.target.reset();
+      if (res.ok) {
+        alert('✅ Alerta enviada');
+        e.target.reset();
+        // Recargar alertas
+        const nuevas = await (await fetch('https://vecinos-virtuales.up.railway.app/api/alertas?barrio_id=1')).json();
+        setAlertas(nuevas);
+      } else {
+        alert('❌ Error al enviar la alerta');
+      }
+    } catch (error) {
+      alert('❌ Error de conexión');
+    }
   };
 
   return (
@@ -102,7 +126,7 @@ export default function App() {
 
       {/* Enviar alerta */}
       <h3>Enviar Alerta Comunitaria</h3>
-      <form onSubmit={enviar} style={{ marginBottom: '20px' }}>
+      <form onSubmit={enviarAlerta} style={{ marginBottom: '20px' }}>
         <input
           name="tipo"
           placeholder="Tipo de alerta"
@@ -132,22 +156,26 @@ export default function App() {
 
       {/* Alertas */}
       <h3>Alertas Recientes</h3>
-      {alertas.map(a => (
-        <div
-          key={a.id}
-          style={{
-            border: '1px solid #ccc',
-            margin: '10px 0',
-            padding: '10px',
-            borderRadius: '4px',
-            backgroundColor: '#f9f9f9'
-          }}
-        >
-          <strong>{a.tipo}</strong>: {a.descripcion}
-          <br />
-          <small>{new Date(a.fecha).toLocaleString()}</small>
-        </div>
-      ))}
+      {alertas.length === 0 ? (
+        <p>No hay alertas aún</p>
+      ) : (
+        alertas.map(a => (
+          <div
+            key={a.id}
+            style={{
+              border: '1px solid #ccc',
+              margin: '10px 0',
+              padding: '10px',
+              borderRadius: '4px',
+              backgroundColor: '#f9f9f9'
+            }}
+          >
+            <strong>{a.tipo}</strong>: {a.descripcion}
+            <br />
+            <small>{new Date(a.fecha).toLocaleString()}</small>
+          </div>
+        ))
+      )}
     </div>
   );
 }
