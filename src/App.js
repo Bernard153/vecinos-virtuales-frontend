@@ -25,7 +25,7 @@ export default function App() {
   const registrar = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('https://vecinos-virtuales.up.railway.app/api/usuarios', {
+      const res = await fetch('https://vecinos-virtuales.up.railway.app/api/alertas?barrio_id=1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, nombre, tipo_usuario: 'común' })
@@ -53,7 +53,7 @@ export default function App() {
     const descripcion = formData.get('descripcion');
 
     try {
-      const res = await fetch('https://vecinos-virtuales.up.railway.app/api/alertas', {
+      const res = await fetch('https://vecinos-virtuales.up.railway.app/api/alertas?barrio_id=1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
